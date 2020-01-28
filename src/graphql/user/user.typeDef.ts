@@ -20,7 +20,8 @@ const GraphQLUser = new GraphQLObjectType({
     firstName: { type: GraphQLString },
     lastName: { type: GraphQLString },
     email: { type: GraphQLString },
-    blogs: GraphQLBlogQueries.blogs
+    blogs: GraphQLBlogQueries.blogs,
+    comment: GraphQLBlogQueries.comment
   })
 });
 

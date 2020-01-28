@@ -5,17 +5,12 @@ import { toGlobalId } from "graphql-relay";
 import { GLOBAL_ID_TYPES } from "../../graphql/globalIdTypes";
 import pubSub from "../../graphql/publisher";
 import { BLOG_SUBSCRIPTION_TRIGGERS } from "../../common/constants/subscriptions";
+import { Comment } from "../../schema/comment/comment.model"
 
 class BlogRepository {
   private static instance: BlogRepository;
 
-  async blogsOfUser(
-    { userId }: { userId: any },
-    {
-      first,
-      after
-    }: { first: number; after: string }
-  ) {
+  async blogsOfUser({ userId }: { userId: any }, { first, after }: { first: number; after: string }) {
 
     let where: any = { userId: toObjectId(userId) };
     if (after) {
@@ -57,7 +52,6 @@ class BlogRepository {
       title,
       content,
       userId: toObjectId(userId),
-      completed: false
     });
 
     await blog.save();
@@ -80,6 +74,44 @@ class BlogRepository {
       message: "blog created successfully!",
       blogEdge
     };
+  }
+
+  async commentBlog({
+    blogId, userId, edits }: { blogId: string; userId: string; edits: object; }) {
+
+    const comment = new Comment(
+      { blogId: blogId, userId: userId, comment: edits });
+
+    comment.save()
+
+    const commentEdge = {
+      cursor: toBase64(`${comment._id}`),
+      node: comment
+    };
+
+    pubSub.publish(
+      `${BLOG_SUBSCRIPTION_TRIGGERS.BLOG_COMMENT}_${comment._id}`,
+      { commentEdge }
+    );
+
+    return {
+      status: "SUCCESS",
+      message: "Successfully commented!",
+      commentEdge
+    };
+  }
+
+
+  async commentsOfBlogs(userId: any) {
+
+    let comments = await Comment.find({ blogId: userId });
+    const edges = comments.map(blog => ({
+      node: blog
+    }));
+
+    return {
+      edges,
+    }
   }
 
   public static getInstance(): BlogRepository {

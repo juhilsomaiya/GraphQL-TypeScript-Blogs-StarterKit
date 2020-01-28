@@ -5,5 +5,4 @@ export interface BlogModel extends mongoose.Document {
     userId: mongoose.Document;
     title: string;
     content: string;
-    comments : [string];
 }

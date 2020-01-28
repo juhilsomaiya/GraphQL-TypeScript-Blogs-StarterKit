@@ -1,4 +1,5 @@
 export const GLOBAL_ID_TYPES = {
   User: "User",
-  Blog: "Blog"
+  Blog: "Blog",
+  Comment: "Comment"
 };

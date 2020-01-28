@@ -12,8 +12,6 @@ const GraphQLUserQueries = {
         userId = uid.userId;
       } catch (err) { }
 
-      console.log({ userId });
-
       if (userId) {
         const user: any = await ctx._userRepository.findUserById(userId);
         return {
