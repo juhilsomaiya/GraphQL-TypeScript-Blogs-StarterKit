@@ -20,7 +20,7 @@ const GraphQLBlogQueries = {
       ...connectionArgs
     }
     , resolve: async (info: any, args: any, ctx: iContext) => {
-      const data = await ctx._blogRepository.commentsOfBlogs(args.blogId);
+      const data = await ctx._blogRepository.commentsOfBlogs(args.blogId, args);
       return data;
     }
   }
