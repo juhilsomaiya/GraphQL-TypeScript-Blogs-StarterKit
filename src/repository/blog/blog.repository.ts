@@ -102,16 +102,45 @@ class BlogRepository {
   }
 
 
-  async commentsOfBlogs(userId: any) {
+  async commentsOfBlogs(blogId: any, { first, after }: { first: number; after: string }) {
+    console.log(first, after);
 
-    let comments = await Comment.find({ blogId: userId });
-    const edges = comments.map(blog => ({
-      node: blog
+    let where: any = { blogId: toObjectId(blogId) };
+    if (after) {
+      where["_id"] = { $lt: toObjectId(fromBase64(after)) };
+    }
+
+    const blogs = await Blog.find({ ...where })
+      .sort({
+        _id: -1
+      })
+      .limit(first);
+
+    const firstEdge: any = _.head(blogs);
+    const lastEdge: any = _.last(blogs);
+
+    const [previousCount, nextCount] = await Promise.all([
+      firstEdge ? Blog.count({ ...where, _id: { $gt: firstEdge._id } }) : 0,
+      lastEdge ? Blog.count({ ...where, _id: { $lt: lastEdge._id } }) : 0
+    ]);
+
+    let comments = await Comment.find({ blogId: blogId }).sort({ _id: -1 }).limit(first);
+
+    const edges = comments.map(comment => ({
+      cursor: toBase64(`${comment._id}`),
+      node: comment
     }));
 
     return {
       edges,
-    }
+      pageInfo: {
+        hasNextPage: nextCount > 0,
+        hasPreviousPage: previousCount > 0,
+        startCursor: firstEdge ? toBase64(`${firstEdge._id}`) : null,
+        endCursor: lastEdge ? toBase64(`${lastEdge._id}`) : null
+      }
+    };
+
   }
 
   public static getInstance(): BlogRepository {
